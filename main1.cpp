@@ -1,16 +1,15 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <windows.h>
 
 using namespace std;
 
-void voice_message(string message) {
+/*void voice_message(string message) {
     string command = "espeak \"" + message + "\"";
     const char* charCommand = command.c_str();
     system(charCommand);
-    Sleep(1000);
-}
+
+}*/
 
 class User {
 protected:
@@ -21,6 +20,8 @@ public:
     virtual void get_username() = 0;
     virtual void get_password() = 0;
     virtual bool login() = 0;
+    virtual string getName();
+    virtual ~User(){}
 
     void register_user(vector<User*>& users) {
         get_username();
@@ -30,12 +31,16 @@ public:
     }
 };
 
+string User::getName() {
+    return username;
+}
+
 class Instructor : public User {
 public:
     void get_username() override {
         cout << "Enter instructor username: " << endl;
         cin >> username;
-        
+
     }
 
     void get_password() override {
@@ -58,37 +63,35 @@ class Student : public User {
 public:
     void get_username() override {
         cout << "Enter student username: ";
-        voice_message("Enter student username");
+        //voice_message("Enter student username");
         cin >> username;
     }
 
     void get_password() override {
         cout << "Enter student password: ";
-        voice_message("Enter student password");
+        //voice_message("Enter student password");
         cin >> password;
     }
 
     bool login() override {
-        string inputUsername, inputPassword;
-        cout << "Enter student username: ";
-        voice_message("Enter student username");
-        cin >> inputUsername;
+        string inputPassword;
+
         cout << "Enter student password: ";
-        voice_message("Enter student password");
+        //voice_message("Enter student password");
         cin >> inputPassword;
 
-        return (inputUsername == username && inputPassword == password);
+        return (inputPassword == password);
     }
 };
 
 void menu() {
     cout << "1. Register\n2. Login\n3. Exit" << endl;
-    voice_message("Enter 1 for registration, 2 for login, 3 for exit");
+   //voice_message("Enter 1 for registration, 2 for login, 3 for exit");
 }
 
 void user_type_menu() {
     cout << "1. Student Account\n2. Instructor Account" << endl;
-    voice_message("Enter 1 for student account, 2 for instructor account");
+    //voice_message("Enter 1 for student account, 2 for instructor account");
 }
 
 int main() {
@@ -99,73 +102,59 @@ int main() {
     do {
         menu();
         cin >> choice;
-
-        switch (choice) {
-        case 1:
+        string inputUsername;
+        if(choice == 1){
             user_type_menu();
             cin >> user_type;
-
-            switch (user_type) {
-            case 1:
+            if (user_type == 1 || user_type == 2)
+            {
                 currentUser = new Student();
-                break;
-            case 2:
-                currentUser = new Instructor();
-                break;
-            default:
-                cout << "Invalid value. Try again." << endl;
-                voice_message("Invalid value. Try again.");
-                continue;
+                currentUser->register_user(users);
+            }else{
+                cout << "Invalid Choice!"<<endl;
+            }
+        }
+        else if(choice == 2)
+        {
+            cout << "Enter student username: ";
+            //voice_message("Enter student username");
+            cin >> inputUsername;
+            int pos = -1;
+            for (int i = 0; i < users.size(); ++i) {
+                if (users.at(i)->getName() == inputUsername)
+                {
+                    pos = i;
+                }
+            }
+            if (pos != -1)
+            {
+                bool success = users.at(pos)->login();
+                if (success){
+                    cout << "Successfully logged in"<<endl;
+                }else{
+                    cout << "Unable to login"<<endl;
+                }
+            }else{
+                cout <<"Student does not exist"<<endl;
             }
 
-            currentUser->register_user(users);
-            break;
 
-        case 2:
-        switch (user_type) {
-        case 1:
-            currentUser = new Student();
-            break;
-        case 2:
-            currentUser = new Instructor();
-            break;
-        default:
-            cout << "Invalid value. Try again." << endl;
-            voice_message("Invalid value. Try again.");
-            continue;
+
+        }else if(choice == 3)
+        {
+            cout << "Exit program"<<endl;
+        }else
+        {
+            cout << "Invalid Choice!"<<endl;
         }
 
-        if (currentUser->login()) {
-            cout << "Login successful!" << endl;
-            voice_message("Login successful");
-        } else {
-            cout << "Login failed. Invalid username or password." << endl;
-            voice_message("Login failed. Invalid username or password");
-            delete currentUser;
-            currentUser = nullptr;
-        }
-    break;
 
-
-        case 3:
-            cout << "Exiting program." << endl;
-            break;
-
-        default:
-            cout << "Invalid value. Try again." << endl;
-            voice_message("Invalid value. Try again.");
-        }
 
     } while (choice != 3);
 
-    if (currentUser != nullptr) {
-        delete currentUser;
-    }
 
 
-    for (User* user : users) {
-        delete user;
-    }
+
 
     return 0;
 }
